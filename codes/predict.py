@@ -20,12 +20,17 @@ def predict(Theta1, Theta2, X):
     #               vector containing labels between 1 to num_labels.
     #
     # Hint: The numpy argmax function might come in useful to return the index of the max element. In particular, the max
-    a1 = np.concatenate((np.ones((m, 1)), X), axis=1)
+
+    b_input = np.ones((m, 1))
+    a1 = np.concatenate((b_input, X), axis=1)
+    # Hidden Layer
     z2 = np.dot(a1, Theta1.T)
     a2 = sigmoid(z2)
-    a2 = np.concatenate((np.ones((a2.shape[0], 1)), a2), axis=1)
+    b_hidden_layer = np.ones((a2.shape[0], 1))
+    a2 = np.concatenate((b_hidden_layer, a2), axis=1)
+    # Output Layer
     z3 = np.dot(a2, Theta2.T)
-    a3 = sigmoid(z3)
+    a3 = sigmoid(z3)  # = h
 
     p = np.argmax(a3, axis=1) + 1
     # =========================================================================

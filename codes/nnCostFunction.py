@@ -39,23 +39,26 @@ def nnCostFunction(nn_params, input_layer_size, hidden_layer_size, num_labels, X
     #         variable J. After implementing Part 1, you can verify that your
     #         cost function computation is correct by verifying the cost
     #         computed in main.py
-    #
-    # Todo
 
-    a1 = np.concatenate((np.ones((m, 1)), X), axis = 1)
+    # Input Layer
+    b_input = np.ones((m, 1))
+    a1 = np.concatenate((b_input, X), axis=1)
+    # Hidden Layer
     z2 = np.dot(a1, Theta1.T)
     a2 = sigmoid(z2)
-    a2 = np.concatenate((np.ones((a2.shape[0], 1)), a2), axis=1)
+    b_hidden_layer = np.ones((a2.shape[0], 1))
+    a2 = np.concatenate((b_hidden_layer, a2), axis=1)
+    # Output Layer
     z3 = np.dot(a2, Theta2.T)
-    a3 = sigmoid(z3)
-    h = a3
+    a3 = sigmoid(z3)  # = h
 
+    # one hot y (numbers) column
     y = y.astype(int)
+    y_one_hot = np.zeros((m, num_labels))
+    for i in range(1, m):
+        y_one_hot[i, y[i] - 1] = 1
 
-    y_temp = np.zeros((m, num_labels))
-    for i in range(1,m):
-        y_temp[i, y[i]-1] = 1
-    J = (1 / m) * np.sum(-y_temp * np.log(h) - (1 - y_temp) * np.log(1 - h))
+    J = (1 / m) * np.sum(-y_one_hot * np.log(a3) - (1 - y_one_hot) * np.log(1 - a3))
 
     # Part 2: Implement the backpropagation algorithm to compute the gradients
     #         Theta1_grad and Theta2_grad. You should return the partial derivatives of
@@ -71,22 +74,32 @@ def nnCostFunction(nn_params, input_layer_size, hidden_layer_size, num_labels, X
     #         Hint: We recommend implementing backpropagation using a for-loop
     #               over the training examples if you are implementing it for the
     #               first time.
-    #
-    # Todo
+
     for t in range(m):
-        a1 = np.concatenate((np.ones((1, 1)), X[t].reshape((1, -1))), axis=1)
+        # 1
+        # Input Layer
+        b_input = np.ones((1, 1))
+        a1 = np.concatenate((b_input, X[t].reshape((1, -1))), axis=1)  # reshape X[t] from one dimension to two dimension after concat
+        # Hidden Layer
         z2 = np.dot(a1, Theta1.T)
         a2 = sigmoid(z2)
-        a2 = np.concatenate((np.ones((a2.shape[0], 1)), a2), axis=1)
+        b_hidden_layer = np.ones((a2.shape[0], 1))
+        a2 = np.concatenate((b_hidden_layer, a2), axis=1)
+        # Output Layer
         z3 = np.dot(a2, Theta2.T)
         a3 = sigmoid(z3)
 
-        delta3 = a3 - y_temp[t]
+        # 2
+        delta3 = a3 - y_one_hot[t]
+
+        # 3
         delta2 = np.dot(delta3, Theta2[:, 1:]) * sigmoidGradient(z2)
 
+        # 4
         Theta1_grad += np.dot(delta2.T, a1)
         Theta2_grad += np.dot(delta3.T, a2)
 
+    # 5
     Theta1_grad /= m
     Theta2_grad /= m
 
@@ -96,12 +109,14 @@ def nnCostFunction(nn_params, input_layer_size, hidden_layer_size, num_labels, X
     #               backpropagation. That is, you can compute the gradients for
     #               the regularization separately and then add them to Theta1_grad
     #               and Theta2_grad from Part 2.
-    #
-    # Todo
+
     J += (lambda_par / (2 * m)) * (np.sum(np.square(Theta1[:, 1:])) + np.sum(np.square(Theta2[:, 1:])))
 
-    Theta1_grad += (lambda_par / m) * np.concatenate((np.zeros((Theta1.shape[0], 1)), Theta1[:, 1:]), axis=1)
-    Theta2_grad += (lambda_par / m) * np.concatenate((np.zeros((Theta2.shape[0], 1)), Theta2[:, 1:]), axis=1)
+    theta1_zero_col = np.zeros((Theta1.shape[0], 1))  # zero col to replace bias col in theta
+    Theta1_grad += (lambda_par / m) * np.concatenate((theta1_zero_col, Theta1[:, 1:]), axis=1)  # remove bias col so regularization does not affect it
+    theta2_zero_col = np.zeros((Theta2.shape[0], 1))  # zero col to replace bias col in theta
+    Theta2_grad += (lambda_par / m) * np.concatenate((theta2_zero_col, Theta2[:, 1:]), axis=1)  # remove bias col so regularization does not affect it
+
     # =========================================================================
 
     # Unroll gradients
